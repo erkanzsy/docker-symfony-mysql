@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  nginx:
+    container_name: my-project-nginx
+    build: docker/nginx
+    ports:
+      - '8088:80'
+    volumes:
+      - ./:/var/www/app
+      - ./docker/nginx/default-compose.conf:/etc/nginx/conf.d/default-compose.conf
+    networks:
+      - my-network
+
+  php:
+    container_name: my-project-fpm
+    build: docker/php
+    volumes:
+      - ./:/var/www/app
+    networks:
+      - my-network
+
+  mysql:
+    container_name: my-project-mysql
+    build: docker/mysql
+    restart: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+    volumes:
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - my-network
+
+  phpmyadmin:
+    container_name: my-project-phpmyadmin
+    build: docker/phpmyadmin
+    restart: on-failure
+    ports:
+      - 7476:80
+    environment:
+      - PMA_HOST=mysql
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./docker/phpmyadmin/upload.ini:/usr/local/etc/php/php.ini
+    networks:
+      - my-network
+
+networks:
+  my-network:
